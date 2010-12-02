@@ -2,18 +2,21 @@
 // Flujo cortante en 3D usando Método de Lattice Boltzmann
 // Terminado Octubre 09 - 2010
 // --------------------------------------------------------------
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "../include/fronteras.h"
+#include "../include/mesh.h"
 
 using namespace std;
 
 // global parameters
 //const int SIZE = 50;
-const int X = 50;
-const int Y = 150;
-const int Z = 50;
+const int X = 32;
+const int Y = 32;
+const int Z = 32;
 
 // single / double precision?
 typedef double Real;
@@ -25,8 +28,8 @@ const Real U = 1.0, V = 0.00, W = 0.00;
 
 // Declare some constants and globals ...
 const Real   omega = 1.00;     // viscosity of the fluid, 0..2
-const int    STEPS = 1;     // max no. of steps to simulate
-const int    VTK = 10;  // write image every ? steps
+const int    STEPS = 1000;     // max no. of steps to simulate
+const int    VTK = 5;  // write image every ? steps
 int current = 0, other = 1; // which grid is the current and the old one?
 
 // main arrays (note - for simplicity these are allocated here, for larger 
@@ -48,17 +51,31 @@ int dfInv[19] = {1,0,3,2,5,4,11,10,13,12,7,6,9,8,17,16,15,14,18};
 
 
 //---------------------------------------------------------------------------//
+// Declare variables of meshes suspended
+//---------------------------------------------------------------------------//
+mesh *mallas[2];
+const int REFERENCIA=0; 
+const int DEFORMADA=1;
+
+//---------------------------------------------------------------------------//
 // Declare auxiliary functions
 //---------------------------------------------------------------------------//
-void nodoSuperior(Real g[19], Real f[19]);
-void nodoInferior(Real g[19], Real f[19]);
 int guardarFluido(int s);
 
 // run the solver
 int main(int argc, char *argv[])
 {
 	printf("Init\n");
-	
+
+	// Initialize meshes
+	mallas[0] = new mesh();
+	mallas[0]->proyectarEsfera(10);
+	mallas[0]->moverCentro(X/2, Y/2, Z/2);
+
+	mallas[1] = new mesh();
+	mallas[1]->proyectarEsfera(10);
+	mallas[1]->moverCentro(X/2, Y/2, Z/2);
+		
 	// initialize grid
 	for (int i=0;i<X;i++)
 		for (int j=0;j<Y;j++)
@@ -78,14 +95,15 @@ int main(int argc, char *argv[])
 	
 		// Stream from the other to the current grid...
 		int a=0,b=0,c=0;
+
 		for (int i=0;i<X;i++)
 			for (int j=0;j<Y;j++)
 				for (int k=1;k<Z-1;k++)
 					for (int l=0;l<19;l++) {
 						int inv = dfInv[l];
-						a = i + e_x[inv];
-					        b = j + e_y[inv];
-					        c = k + e_z[inv];
+						int a = i + e_x[inv];
+					    int b = j + e_y[inv];
+					    int c = k + e_z[inv];
 
 					        // Periodico en x
 					        if(a<0){a=X-1;}
@@ -101,11 +119,13 @@ int main(int argc, char *argv[])
 							// Streaming - normal
 							cells[current][i][j][k][l] = cells[other][a][b][c][l];}
 					}//Stream
+	
 		for (int i=0;i<X;i++)
 			for (int j=0;j<Y;j++){
-			nodoInferior(cells[current][i][j][0],cells[other][i][j][0]);
-			nodoSuperior(cells[current][i][j][Z-1],cells[other][i][j][Z-1]);}
-	
+			velNodoInferior(cells[current][i][j][0],cells[other][i][j][0], U, V, W);
+			velNodoSuperior(cells[current][i][j][Z-1],cells[other][i][j][Z-1], U, V, W);
+			}
+
 		// collision step
 		for (int i=0;i<X;i++)
 			for (int j=0;j<Y;j++)
@@ -145,45 +165,6 @@ int main(int argc, char *argv[])
 	}// End simulation
 	printf("LBM-simulation done!\n");
 	return 0;
-}
-
-
-void nodoSuperior(Real g[19], Real f[19])
-{
-	// Calculate new distributions functions
-	g=f;
-	Real A=0.0, B=0.0, rho=0.0, Nx=0.0, Ny=0.0;
-    	A=f[0]+f[1]+f[2]+f[3]+f[6]+f[10]+f[11]+f[7]+f[18];
-    	B=f[4]+f[8]+f[12]+f[14]+f[16];
-    	rho = (A+2*B)/(W+1);
-    
-   	Nx=(1./2.)*(f[0]+f[6]+f[7]-(f[1]+f[10]+f[11]))-(1./3.)*rho*U;
-    	Ny=(1./2.)*(f[2]+f[6]+f[10]-(f[3]+f[7]+f[11]))-(1./3.)*rho*V;
-    
-    	g[5]=f[4]-(1./3.)*rho*W;
-    	g[9]=f[12]+(rho/6)*(-W+U)-Nx;
-    	g[13]=f[8]+(rho/6)*(-W-U)+Nx;
-    	g[15]=f[16]+(rho/6)*(-W+V)-Ny;
-    	g[17]=f[14]+(rho/6)*(-W-V)+Ny;
-}
-
-void nodoInferior(Real g[19], Real f[19])
-{
-	// Calculate new distributions functions
-	g=f;
-	Real A=0.0, B=0.0, rho=0.0, Nx=0.0, Ny=0.0;
-	A=f[0]+f[1]+f[2]+f[3]+f[6]+f[7]+f[10]+f[11]+f[18];
-	B=f[5]+f[9]+f[13]+f[15]+f[17];
-    	rho = (A+2*B)/(1-W);
-    
-    	Nx=(1./2.)*(f[0]+f[6]+f[7]-(f[1]+f[10]+f[11]))-(1./3.)*rho*-U;
-    	Ny=(1./2.)*(f[2]+f[6]+f[10]-(f[3]+f[7]+f[11]))-(1./3.)*rho*V;
-    
-    	g[4]=f[5]+(1./3.)*rho*W;
-    	g[8]=f[13]+(rho/6)*(W-U)-Nx;
-    	g[12]=f[9]+(rho/6)*(W+U)+Nx;
-    	g[14]=f[17]+(rho/6)*(W+V)-Ny;
-    	g[16]=f[15]+(rho/6)*(W-V)+Ny;
 }
 
 

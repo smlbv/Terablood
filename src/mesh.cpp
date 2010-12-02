@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include "../include/mesh.h"
+#include "../include/elemento.h"
 
 // Constructor
 mesh::mesh()
@@ -10,7 +11,6 @@ mesh::mesh()
 	float t = (1.+sqrt(5.))/2.;
 	float tau = t/sqrt(1.+t*t);
         float one = 1./sqrt(1.+t*t); // Unit sphere
-        
 
         // Twelve vertices of icosahedron on unit sphere
         // Creacion dinamica de arreglos al apuntador
@@ -72,7 +72,6 @@ mesh::mesh()
                         {6, 11,  1},
                         {7, 9,  2},
                         {6,  2, 10}};
-  	printf("Nodo: %d\n",prueba[0][1]);
 	for(int i = 0; i<nCeldas ; i++)
 		for(int j = 0 ; j<3 ; j++)
 		{
@@ -175,9 +174,9 @@ void mesh::proyectarRBC(float r)
 		z = vertex[i][2]*vertex[i][2];
 		float mag = sqrt(x+y+z);
 		if(vertex[i][2]/mag<0){
-			vertex[i][2]=-Z + (X*X)/16;
+			vertex[i][2]=-Z;// + (X*X)/16;
 		}else{
-			vertex[i][2]=Z + (X*X)/16;
+			vertex[i][2]=Z;// + (X*X)/16;
 		}
 	}
 }
@@ -349,15 +348,11 @@ int mesh::posicionNodo(float x, float y, float z)
 	return agregarNodo(x,y,z);
 }
 
-
-
 /**
 
 */
-
 int mesh::guardarVTU(int t)
 {
-	printf("%d",t);
 	FILE *archivo;/*El manejador de archivo*/
 	char ruta[80];
 	char numero[4];
@@ -395,8 +390,147 @@ int mesh::guardarVTU(int t)
 	for(int i = 0; i<nCeldas ; i++){
 		fprintf(archivo, "5 \n");}
 
+	// Escribir velocidad 
+	fprintf(archivo,"POINT_DATA %d\n", nNodos);
+	fprintf(archivo,"VECTORS Velocidad double\n", nNodos);
+	for(int i=0;i<nNodos;i++)
+	{
+		fprintf(archivo, "%f %f %f\n", velocidad[i][0], velocidad[i][1], velocidad[i][2]);
+	}
+	
+	// Escribir fuerza
+	//fprintf(archivo,"POINT_DATA %d\n", nNodos);
+	fprintf(archivo,"VECTORS Fuerza double\n", nNodos);
+	for(int i=0;i<nNodos;i++)
+	{
+		fprintf(archivo, "%f %f %f\n", fuerza[i][0], fuerza[i][1], fuerza[i][2]);
+	}
+	
 	fclose(archivo);/*Cerramos el archivo*/
 	return 0;
 	}
 }
 
+void mesh::iniciarVelocidad()
+{
+	velocidad = new float*[nNodos];
+	velocidad2 = new float*[nNodos];		
+	for(int i = 0 ; i<nNodos ; i++)
+	{
+		velocidad[i] = new float[3];
+		velocidad2[i] = new float[3];
+	}
+}
+
+void mesh::iniciarFuerzas()
+{
+	fuerza = new float*[nNodos];	
+	for(int i = 0 ; i<nNodos ; i++)
+	{
+		fuerza[i] = new float[3];
+	}
+}
+
+
+void mesh::setVelocidad(int n, float ux, float uy, float uz)
+{
+	velocidad2[n][0] = velocidad[n][0];
+	velocidad2[n][1] = velocidad[n][1]; 
+	velocidad2[n][2] = velocidad[n][2];  
+	
+	velocidad[n][0] = ux;
+	velocidad[n][1] = uy;
+	velocidad[n][2] = uz;
+}
+
+
+
+void mesh::darPosNodo(int n, float pos[3])
+{
+	pos[0] = vertex[n][0];
+	pos[1] = vertex[n][1];
+	pos[2] = vertex[n][2];
+}
+
+void mesh::darFuerzaNodo(int n, float f[3])
+{
+	f[0] = fuerza[n][0];
+	f[1] = fuerza[n][1];
+	f[2] = fuerza[n][2];
+}
+
+
+void mesh::moverNodos(float dt, float dx)
+{
+	for(int u=0;u<nNodos;u++)
+	{
+		vertex[u][0] += (3/2)*(velocidad[u][0]*dt) - (1./2.0)*(velocidad2[u][0]);
+		vertex[u][1] += (3/2)*(velocidad[u][1]*dt) - (1./2.0)*(velocidad2[u][1]);
+		vertex[u][2] += (3/2)*(velocidad[u][2]*dt) - (1./2.0)*(velocidad2[u][2]);
+	}
+}
+
+void mesh::calcularFuerzas(mesh referencia)
+{
+	int a,b,c;
+	float va[3], vb[3], vc[3], vA[3], vB[3], vC[3];
+	// Crear estructuras para pasar al algoritmo de fuerzas
+	float ref[3][3], def[3][3], fuerzas[3][3];
+	
+	// Obtener indices de los nodos de cada elemento
+	for(int e=0;e<nCeldas;e++)
+	{
+		a = faces[e][0];
+		b = faces[e][1];
+		c = faces[e][2];
+		
+		// Obtener las posiciones de cada vertice no deformado
+		referencia.darPosNodo(a,va);
+		referencia.darPosNodo(b,vb);	
+		referencia.darPosNodo(c,vc);		
+	
+		// Obtener las posiciones de cada vertice deformado
+		darPosNodo(a,vA);
+		darPosNodo(b,vB);	
+		darPosNodo(c,vC);
+
+		ref[0][0] = va[0];
+		ref[0][1] = va[1];
+		ref[0][2] = va[2];
+	
+		ref[1][0] = vb[0];
+		ref[1][1] = vb[1];
+		ref[1][2] = vb[2];
+	
+		ref[2][0] = vc[0];
+		ref[2][1] = vc[1];
+		ref[2][2] = vc[2];
+	
+		def[0][0] = vA[0];
+		def[0][1] = vA[1];
+		def[0][2] = vA[2];
+	
+		def[1][0] = vB[0];
+		def[1][1] = vB[1];
+		def[1][2] = vB[2];
+	
+		def[2][0] = vC[0];
+		def[2][1] = vC[1];
+		def[2][2] = vC[2];
+
+		rotacion(ref, def, fuerzas);
+		
+		//Agregar cada fuerza a cada nodo
+		fuerza[a][0] += fuerzas[0][0];
+		fuerza[a][1] += fuerzas[0][1];
+		fuerza[a][2] += fuerzas[0][2];
+		
+		fuerza[b][0] += fuerzas[1][0];
+		fuerza[b][1] += fuerzas[1][1];
+		fuerza[b][2] += fuerzas[1][2];
+		
+		fuerza[c][0] += fuerzas[2][0];
+		fuerza[c][1] += fuerzas[2][1];
+		fuerza[c][2] += fuerzas[2][2];
+	}
+}

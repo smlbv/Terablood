@@ -12,7 +12,7 @@ using namespace std;
 *	@return float** fuerzas, Apuntador hacia las fuerzas calculadas en cada nodo
 */
 
-float** fuerzas(float referencia[3][3], float deformado[3][3])
+void fuerzas(float referencia[3][3], float deformado[3][3], float fuerzas[3][3])
 {
 		// Coordenadas de los tres vertices iniciales			
 		float xi=referencia[0][0];
@@ -63,7 +63,7 @@ float** fuerzas(float referencia[3][3], float deformado[3][3])
 		float bj = xi - xk;
 		float cj = xk*yi - xi*yk;
 		float Lj = aj*xj + bj*yj + cj;
-		
+				
 		float ak = yi - yj;
 		float bk = xj - xi;
 		float ck = xi*yj - xj*yi;
@@ -74,113 +74,112 @@ float** fuerzas(float referencia[3][3], float deformado[3][3])
 		float dudy = ui*bi/Li + uj*bj/Lj + uk*bk/Lk;
 		float dvdx = vi*ai/Li + vj*aj/Lj + vk*ak/Lk;
 		float dvdy = vi*bi/Li + vj*bj/Lj + vk*bk/Lk;
-
+		
 		// Componentes del vector [G] revision Sep/14/2010
-		float g11 = (1+dudx)*(1+dudx) + (dvdx)*(dvdx);
-		float g12 = (1+dudx)*(dudy) + (1+dvdy)*(dvdx);
+		float g11 = (1.0+dudx)*(1.0+dudx) + (dvdx)*(dvdx);
+		float g12 = (1.0+dudx)*(dudy) + (1.0+dvdy)*(dvdx);
 		float g21 = g12;
-		float g22 = (1+dvdy)*(1+dvdy) + (dudy)*(dudy);
+		float g22 = (1.0+dvdy)*(1.0+dvdy) + (dudy)*(dudy);
 		float G[2][2] = {{g11,g12},{g21,g22}};
 
 		// Calculo de lambda1 y lambda2 revision Sep/14/2010
-		float l1 = sqrt((g11 + g22 + sqrt((g11-g22)*(g11-g22) + 4*g12*g12))/2);
-		float l2 = sqrt((g11 + g22 - sqrt((g11-g22)*(g11-g22) + 4*g12*g12))/2);
-		printf("%f\n", g22);
+		float l1 = sqrt((g11 + g22 + sqrt((g11-g22)*(g11-g22) + 4.*g12*g12))/2.);
+		float l2 = sqrt((g11 + g22 - sqrt((g11-g22)*(g11-g22) + 4.*g12*g12))/2.);
 
 		// Derivadas de la funcion Strain Energy respecto a lambda 1 y lambda 2 
 		// Modelo de energia Skalak 1973 revision Sep/14/2010
-		float B = 1.0;	// [dyn/cm]
-		float C = 1.0;	// [dyn/cm]
 		float I1 = (l1*l1) + (l2*l2) - 2.0;
 		float I2 = (l1*l1)*(l2*l2)-1.0;
-		float dI1dl1 = 2*l1; 
-		float dI1dl2 = 2*l2;
-		float dI2dl1 = 2*l1*(l2*l2);
-		float dI2dl2 = 2*l2*(l1*l1);
-	//    dwdl1 = (B/4)*(I1*dI1dl1 + dI1dl1 - dI2dl1) + (C/4)*(I2)*(dI2dl1)
-	//    dwdl2 = (B/4)*(I1*dI1dl2 + dI1dl2 - dI2dl2) + (C/4)*(I2)*(dI2dl2)
-		float ks = 0.022131199*100;
-		float dwdl1 = (ks/12)*(2*I1*dI1dl1 + 2*dI1dl1 -2*dI2dl1) + (ks/6)*I2*dI2dl1;
-		float dwdl2 = (ks/12)*(2*I1*dI1dl2 + 2*dI1dl2 -2*dI2dl2) + (ks/6)*I2*dI2dl2;
+		float dI1dl1 = 2.0*l1; 
+		float dI1dl2 = 2.0*l2;
+		float dI2dl1 = 2.0*l1*(l2*l2);
+		float dI2dl2 = 2.0*l2*(l1*l1);
+		
+		//    dwdl1 = (B/4)*(I1*dI1dl1 + dI1dl1 - dI2dl1) + (C/4)*(I2)*(dI2dl1)
+		//    dwdl2 = (B/4)*(I1*dI1dl2 + dI1dl2 - dI2dl2) + (C/4)*(I2)*(dI2dl2)
+		float ks = 0.01587;
+		float dwdl1 = (ks/12.)*(2.*I1*dI1dl1 + 2.0*dI1dl1 -2.0*dI2dl1) + (ks/6.0)*I2*dI2dl1;
+		float dwdl2 = (ks/12.)*(2.*I1*dI1dl2 + 2.0*dI1dl2 -2.0*dI2dl2) + (ks/6.0)*I2*dI2dl2;
 
 		// Calculo de diferenciales sobre l1 y l2 respecto a desplazamientos de nodos
 		// 1. Derivadas de [G] respecto a desplazamiento de nodos revision Sep/14/2010
-		float dg11dui = 2*(1+ dudx)*(ai/Li);
-		float dg11duj = 2*(1+ dudx)*(aj/Lj);
-		float dg11duk = 2*(1+ dudx)*(ak/Lk);
-		float dg11dvi = 2*dvdx*(ai/Li);
-		float dg11dvj = 2*dvdx*(aj/Lj);
-		float dg11dvk = 2*dvdx*(ak/Lk);
+		float dg11dui = 2.0*(1.0+ dudx)*(ai/Li);
+		float dg11duj = 2.0*(1.0+ dudx)*(aj/Lj);
+		float dg11duk = 2.0*(1.0+ dudx)*(ak/Lk);
+		float dg11dvi = 2.0*dvdx*(ai/Li);
+		float dg11dvj = 2.0*dvdx*(aj/Lj);
+		float dg11dvk = 2.0*dvdx*(ak/Lk);
 		
-		float dg12dui = (1+dudx)*(bi/Li) + (ai/Li)*(dudy);
-		float dg12duj = (1+dudx)*(bj/Lj) + (aj/Lj)*(dudy);
-		float dg12duk = (1+dudx)*(bk/Lk) + (ak/Lk)*(dudy);
-		float dg12dvi = (1+dvdy)*(ai/Li) + (bi/Li)*(dvdx);
-		float dg12dvj = (1+dvdy)*(aj/Lj) + (bj/Lj)*(dvdx);
-		float dg12dvk = (1+dvdy)*(ak/Lk) + (bk/Lk)*(dvdx);
+		float dg12dui = (1.0+dudx)*(bi/Li) + (ai/Li)*(dudy);
+		float dg12duj = (1.0+dudx)*(bj/Lj) + (aj/Lj)*(dudy);
+		float dg12duk = (1.0+dudx)*(bk/Lk) + (ak/Lk)*(dudy);
+		float dg12dvi = (1.0+dvdy)*(ai/Li) + (bi/Li)*(dvdx);
+		float dg12dvj = (1.0+dvdy)*(aj/Lj) + (bj/Lj)*(dvdx);
+		float dg12dvk = (1.0+dvdy)*(ak/Lk) + (bk/Lk)*(dvdx);
 		
-		float dg22dui = 2*dudy*(bi/Li);
-		float dg22duj = 2*dudy*(bj/Lj);
-		float dg22duk = 2*dudy*(bk/Lk);
-		float dg22dvi = 2*(1+dvdy)*(bi/Li);
-		float dg22dvj = 2*(1+dvdy)*(bj/Lj);
-		float dg22dvk = 2*(1+dvdy)*(bk/Lk);
+		float dg22dui = 2.0*dudy*(bi/Li);
+		float dg22duj = 2.0*dudy*(bj/Lj);
+		float dg22duk = 2.0*dudy*(bk/Lk);
+		
+		float dg22dvi = 2.0*(1.0+dvdy)*(bi/Li);
+		float dg22dvj = 2.0*(1.0+dvdy)*(bj/Lj);
+		float dg22dvk = 2.0*(1.0+dvdy)*(bk/Lk);
 
 		// 2. Calculo de las derivadas de lambda 1 y lambda 2 respecto desplazamientos
 		// nodales revision Sep/14/2010
 		// Formulacion Rolling John Hopkins
 		float t0 = sqrt((g11-g22)*(g11-g22) + 4.*g12*g12);
-		float t1 = ((g11 + g22 + t0));
-		float jl1 = sqrt(0.5*t1);
-		float jl2 = sqrt(0.5*(g11+g22-t0));
-		float t2 = dg11dui - dg22dui;
 		
-		float t3;
-		if(abs(t0) > 1.0e-3){
-		    t3 = 0.5/(t0*(g11-g22)*(dg11dui - dg22dui) + 8.*g12*dg12dui);}
-		else{
-		    t3=0.0;}
-		float dl1dui = 0.5*sqrt(0.5)/sqrt(t1)*(t2+t3);
-		float dl2dui = 0.5*sqrt(0.5)/sqrt(t1-2.*t0)*(t2-t3);
+		// Derivadas de lambda1  y lambda 2
 		
-		t2 = dg11duj - dg22duj;
-		if(abs(t0) > 1.0e-03){
-		    t3  = + 0.5/t0*(2.*(g11-g22)*(dg11duj - dg22duj) + 8.*g12*dg12duj );}
+		float dt0dui;
+		if(t0>10e-3){
+			dt0dui = ((((g11-g22)*(dg11dui-dg22dui))+(4.*g12*dg12dui))/(t0));}
 		else{
-		   t3 =0.0;}
+			dt0dui = 0.0;}
+		float dl1dui = ((sqrt(0.5)*0.5)/(sqrt(g11+g22+t0)))*(dg11dui + dg22dui + dt0dui);
+		float dl2dui = ((sqrt(0.5)*0.5)/(sqrt(g11+g22-t0)))*(dg11dui + dg22dui - dt0dui);
 		
-		float dl1duj = 0.5*sqrt(0.5)/sqrt(t1)*(t2+t3);
-		float dl2duj = 0.5*sqrt(0.5)/sqrt(t1-2.*t0)*(t2-t3);
-		t2 = dg11duk + dg22duk;
-		if(abs(t0) > 1.0e-03){
-		   t3  = + 0.5/t0*(2.*(g11-g22)*(dg11duk - dg22duk) + 8.*g12*dg12duk );}
+		float dt0duj;
+		if(t0>10e-3){
+			dt0duj = ((((g11-g22)*(dg11duj-dg22duj))+(4.*g12*dg12duj))/(t0));}
 		else{
-		   t3 = 0.0;}
-
-		float dl1duk = 0.5*sqrt(0.5)/sqrt(t1)*(t2+t3);
-		float dl2duk = 0.5*sqrt(0.5)/sqrt(t1-2.*t0)*(t2-t3);
-		t2 = dg11dvi + dg22dvi;
-		if(abs(t0) > 1.0e-03){
-		   t3  = + 0.5/t0*(2.*(g11-g22)*(dg11dvi - dg22dvi) + 8.*g12*dg12dvi );}
+			dt0duj = 0.0;}
+		float dl1duj = ((sqrt(0.5)*0.5)/(sqrt(g11+g22+t0)))*(dg11duj + dg22duj + dt0duj);
+		float dl2duj = ((sqrt(0.5)*0.5)/(sqrt(g11+g22-t0)))*(dg11duj + dg22duj - dt0duj);
+		
+		float dt0duk;
+		if(t0>10e-3){
+			dt0duk = ((((g11-g22)*(dg11duk-dg22duk))+(4.*g12*dg12duk))/(t0));}
 		else{
-		   t3 = 0.0;}
-		float dl1dvi = 0.5*sqrt(0.5)/sqrt(t1)*(t2+t3);
-		float dl2dvi = 0.5*sqrt(0.5)/sqrt(t1-2.*t0)*(t2-t3);
-		t2 = dg11dvj + dg22dvj;
-		if(abs(t0) > 1.0e-03){
-		   t3  = + 0.5/t0*(2.*(g11-g22)*(dg11dvj - dg22dvj)+ 8.*g12*dg12dvj );}
+			dt0duk = 0.0;}
+		float dl1duk = ((sqrt(0.5)*0.5)/(sqrt(g11+g22+t0)))*(dg11duk + dg22duk + dt0duk);
+		float dl2duk = ((sqrt(0.5)*0.5)/(sqrt(g11+g22-t0)))*(dg11duk + dg22duk - dt0duk);
+		
+		float dt0dvi;
+		if(t0>10e-3){
+			dt0dvi = ((((g11-g22)*(dg11dvi-dg22dvi))+(4.*g12*dg12dvi))/(t0));}
 		else{
-		   t3 = 0.0;}
-		float dl1dvj = 0.5*sqrt(0.5)/sqrt(t1)*(t2+t3);
-		float dl2dvj = 0.5*sqrt(0.5)/sqrt(t1-2.*t0)*(t2-t3);
-		t2 = dg11dvk + dg22dvk;
-		if(abs(t0) > 1.0e-03){
-		    t3  = + 0.5/t0*(2.*(g11-g22)*(dg11dvk - dg22dvk)+ 8.*g12*dg12dvk );}
+			dt0dvi = 0.0;}
+		float dl1dvi = ((sqrt(0.5)*0.5)/(sqrt(g11+g22+t0)))*(dg11dvi + dg22dvi + dt0dvi);
+		float dl2dvi = ((sqrt(0.5)*0.5)/(sqrt(g11+g22-t0)))*(dg11dvi + dg22dvi - dt0dvi);
+		
+		float dt0dvj;
+		if(t0>10e-3){
+			dt0dvj = ((((g11-g22)*(dg11dvj-dg22dvj))+(4.*g12*dg12dvj))/(t0));}
 		else{
-		    t3 = 0.0;}
-		float dl1dvk = 0.5*sqrt(0.5)/sqrt(t1)*(t2+t3);
-		float dl2dvk = 0.5*sqrt(0.5)/sqrt(t1-2.*t0)*(t2-t3);
-
+			dt0dvj = 0.0;}
+		float dl1dvj = ((sqrt(0.5)*0.5)/(sqrt(g11+g22+t0)))*(dg11dvj + dg22dvj + dt0dvj);
+		float dl2dvj = ((sqrt(0.5)*0.5)/(sqrt(g11+g22-t0)))*(dg11dvj + dg22dvj - dt0dvj);
+		
+		float dt0dvk;
+		if(t0>10e-3){
+			dt0dvk = ((((g11-g22)*(dg11dvk-dg22dvk))+(4.*g12*dg12dvk))/(t0));}
+		else{
+			dt0dvk = 0.0;}
+		float dl1dvk = ((sqrt(0.5)*0.5)/(sqrt(g11+g22+t0)))*(dg11dvk + dg22dvk + dt0dvk);
+		float dl2dvk = ((sqrt(0.5)*0.5)/(sqrt(g11+g22-t0)))*(dg11dvk + dg22dvk - dt0dvk);				
+		
 		// 3. Calculo de las derivadas de w respecto a los desplazamientos nodales
 		// revision Sep/14/2010
 		float dwdui = dwdl1*dl1dui + dwdl2*dl2dui;
@@ -191,25 +190,20 @@ float** fuerzas(float referencia[3][3], float deformado[3][3])
 		float dwdvk = dwdl1*dl1dvk + dwdl2*dl2dvk;
 
 		// 4. Volumen del elemento revision Sep/14/2010
-		float a0 = ((xj-xi)*(yk-yi) - (xk-xi)*(yj-yi))/2;
-		t0 = 0.1;
+		float a0 = ((xj-xi)*(yk-yi) - (xk-xi)*(yj-yi))/2.0;
+		float espesor = 3.5*0.0025;
 		
 		// 5. Calculo de las componentes de fuerza revision Sep/14/2010
-		float fxi = dwdui*a0*t0;
-		float fyi = dwdvi*a0*t0;
+		float fxi = dwdui*a0*espesor;
+		float fyi = dwdvi*a0*espesor;
 		float fzi = 0.0;
-		float fxj = dwduj*a0*t0;
-		float fyj = dwdvj*a0*t0;
+		float fxj = dwduj*a0*espesor;
+		float fyj = dwdvj*a0*espesor;
 		float fzj = 0.0;
-		float fxk = dwduk*a0*t0;
-		float fyk = dwdvk*a0*t0;
+		float fxk = dwduk*a0*espesor;
+		float fyk = dwdvk*a0*espesor;
 		float fzk = 0.0;
 		
-		float **fuerzas = new float*[3];
-		for(int i = 0;i<3;i++)
-		{
-			fuerzas[i] = new float[3];
-		}
 		fuerzas[0][0] = fxi;
 		fuerzas[0][1] = fyi;
 		fuerzas[0][2] = fzi;
@@ -219,8 +213,6 @@ float** fuerzas(float referencia[3][3], float deformado[3][3])
 		fuerzas[2][0] = fxk;
 		fuerzas[2][1] = fyk;
 		fuerzas[2][2] = fzk;
-
-		return fuerzas;
 }
 
 
@@ -230,14 +222,12 @@ float** fuerzas(float referencia[3][3], float deformado[3][3])
 *	@param float b[3], Vector b
 *	@param float &resultado[3], Paso por parametros
 */
-
 void cross(float a[3], float b[3], float &x, float &y, float &z)
 {
 	x = a[1]*b[2] - a[2]*b[1];
 	y = a[2]*b[0] - a[0]*b[2];
 	z = a[0]*b[1] - a[1]*b[0];
 }
-
 
 /**
 *	Función para calcular la norma de un vector
@@ -271,7 +261,7 @@ void MdotV(float M[3][3], float V[3], float &x, float &y, float &z)
 *	@return float** vertices, Apuntador hacia los vertices en un plano común
 */
 
-float** rotacion(float referencia[3][3], float deformado[3][3])
+void rotacion(float referencia[3][3], float deformado[3][3], float nfuerzas[3][3])
 {
 
 	// Coordenadas iniciales de los tres nodos respecto al sistema 
@@ -332,7 +322,8 @@ float** rotacion(float referencia[3][3], float deformado[3][3])
 	e[2][1] = ve3[1];
 	e[2][2] = ve3[2];
 
-	// Matriz de rotacion para la configuracion NO deformada [r]
+	// Matriz de rotacion para la configuracion NO deformada 
+	// [r] hacia las coordenadas globales
     float d1 = (xj-xi)/m1;
     float d2 = (yj-yi)/m1;
     float d3 = (zj-zi)/m1;
@@ -375,7 +366,8 @@ float** rotacion(float referencia[3][3], float deformado[3][3])
 	E[2][1] = E3[1];
 	E[2][2] = E3[2];
 
-	// Matriz de rotacion para la configuracion deformada [R]
+	// Matriz de rotacion para la configuracion deformada 
+	// [R] hacia la base global i
     d1 = (Xj-Xi)/M1;
     d2 = (Yj-Yi)/M1;
     d3 = (Zj-Zi)/M1;
@@ -483,8 +475,7 @@ float** rotacion(float referencia[3][3], float deformado[3][3])
 	def[2][0] = Pk[0];
 	def[2][1] = Pk[1];
 	def[2][2] = Pk[2];
-	float **nfuerzas;
-	nfuerzas = fuerzas(ref, def);
+	fuerzas(ref, def, nfuerzas);
 
 	// Transformar las fuerzas calculadas a la base original 
 	float tR[3][3];
@@ -511,6 +502,4 @@ float** rotacion(float referencia[3][3], float deformado[3][3])
 	nfuerzas[2][0] = nfn3[0];
 	nfuerzas[2][1] = nfn3[1];
 	nfuerzas[2][2] = nfn3[2];
-
-	return nfuerzas;
 }

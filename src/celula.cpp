@@ -14,7 +14,10 @@ int main(int argc, char *argv[])
 	
 	printf("Generando malla..\n");
 	mesh.mesh_refine_tri4();
+	mesh.mesh_refine_tri4();
+	mesh.mesh_refine_tri4();
 	mesh.proyectarEsfera(10);
 	mesh.proyectarRBC(10);
+	mesh.guardarVTU(1);
 	return 0;
 }

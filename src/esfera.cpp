@@ -7,6 +7,7 @@
 
 int main(int argc, char *argv[])
 {
+	mesh malla[3];	
 	mesh mesh;
 	float** nodos = mesh.darNodos();
 	int** celdas = mesh.darCeldas();
@@ -25,31 +26,31 @@ int main(int argc, char *argv[])
 	printf("Resultado: %f %f %f\n", c[0], c[1], c[2]);
 
 	// Prueba de funcion norma
-	printf("Norma de a: %f\n", norm(a));
+	// printf("Norma de a: %f\n", norm(a));
 
 
 	// Prueba de fuerzas
 	float referencia[3][3]={{0,0,0},{2.0,0,0},{1.0,1.0,0}};
-	float deformado[3][3]={{0,0,0},{2.0,0,0},{1.0,1.0,0}};	
-	float **fuerza;
-	fuerza = fuerzas(referencia, deformado);
+	float deformado[3][3]={{0,0,0},{2.0,0,0},{1.0,2.0,0}};	
+	float fuerza[3][3];
+	fuerzas(referencia, deformado, fuerza);
 	for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			printf("%f ", fuerza[i][j]);
 		}
 		printf("\n");
 	}	
-
+	printf("\n");
 	// Probar resultado Matriz dot Vector
 	float v[3];
 	MdotV(referencia, a, v[0], v[1], v[2]);	
-	printf("Dot: %f %f %f\n", v[0], v[1], v[2]);
+//	printf("Dot: %f %f %f\n", v[0], v[1], v[2]);
 
 	// Prueba de fuerzas + rotacion 
-	float ref[3][3]={{0,0,0},{2.0,0,0},{1.0,1.0,0}};
-	float def[3][3]={{0,0,0},{2.0,0,0},{1.0,0.0,2.0}};	
-	float **fuerza3;
-	fuerza3 = rotacion(ref, def);
+	float ref[3][3]={{0.0,0.0,0.0},{2.0,0.0,0.0},{1.0,1.0,0.0}};
+	float def[3][3]={{0.0,0.0,0.0},{2.0,0.0,0.0},{1.0,0.0,2.0}};	
+	float fuerza3[3][3];
+	rotacion(ref, def, fuerza3);
 	for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			printf("%f ", fuerza3[i][j]);

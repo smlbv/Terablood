@@ -30,6 +30,9 @@
 
 		private:
 		float **vertex;
+		float **velocidad;
+		float **velocidad2;
+		float **fuerza;
 		int **faces;
 		int nNodos;	//Numero de nodos
 		int nCeldas;	//Número de celdas
@@ -49,6 +52,13 @@
 		void proyectarRBC(float r);
 		void moverCentro(float x, float y, float z);
 		void rotarEstructura(float alpha, float phi, float theta);
+		void iniciarVelocidad();
+		void iniciarFuerzas();
+		void darPosNodo(int n, float pos[3]);
+		void darFuerzaNodo(int n, float f[3]);
+		void setVelocidad(int n, float ux, float uy, float uz);
+		void moverNodos(float dt, float dx);
+		void calcularFuerzas(mesh referencia);
 		// Constructor
 		mesh();
 		// Destructor
