@@ -89,7 +89,7 @@ void fuerzas(float referencia[3][3], float deformado[3][3], float fuerzas[3][3])
 		// Derivadas de la funcion Strain Energy respecto a lambda 1 y lambda 2 
 		// Modelo de energia Skalak 1973 revision Sep/14/2010
 		float I1 = (l1*l1) + (l2*l2) - 2.0;
-		float I2 = (l1*l1)*(l2*l2)-1.0;
+		float I2 = (l1*l1)*(l2*l2) - 1.0;
 		float dI1dl1 = 2.0*l1; 
 		float dI1dl2 = 2.0*l2;
 		float dI2dl1 = 2.0*l1*(l2*l2);
@@ -97,9 +97,9 @@ void fuerzas(float referencia[3][3], float deformado[3][3], float fuerzas[3][3])
 		
 		//    dwdl1 = (B/4)*(I1*dI1dl1 + dI1dl1 - dI2dl1) + (C/4)*(I2)*(dI2dl1)
 		//    dwdl2 = (B/4)*(I1*dI1dl2 + dI1dl2 - dI2dl2) + (C/4)*(I2)*(dI2dl2)
-		float ks = 0.01587;
-		float dwdl1 = (ks/12.)*(2.*I1*dI1dl1 + 2.0*dI1dl1 -2.0*dI2dl1) + (ks/6.0)*I2*dI2dl1;
-		float dwdl2 = (ks/12.)*(2.*I1*dI1dl2 + 2.0*dI1dl2 -2.0*dI2dl2) + (ks/6.0)*I2*dI2dl2;
+		float ks = 5.55e-3;
+		float dwdl1 = (ks/12.)*(2.*I1*dI1dl1 + 2.0*dI1dl1 - 2.0*dI2dl1) + (ks/6.0)*I2*dI2dl1;
+		float dwdl2 = (ks/12.)*(2.*I1*dI1dl2 + 2.0*dI1dl2 - 2.0*dI2dl2) + (ks/6.0)*I2*dI2dl2;
 
 		// Calculo de diferenciales sobre l1 y l2 respecto a desplazamientos de nodos
 		// 1. Derivadas de [G] respecto a desplazamiento de nodos revision Sep/14/2010
@@ -127,7 +127,6 @@ void fuerzas(float referencia[3][3], float deformado[3][3], float fuerzas[3][3])
 
 		// 2. Calculo de las derivadas de lambda 1 y lambda 2 respecto desplazamientos
 		// nodales revision Sep/14/2010
-		// Formulacion Rolling John Hopkins
 		float t0 = sqrt((g11-g22)*(g11-g22) + 4.*g12*g12);
 		
 		// Derivadas de lambda1  y lambda 2
@@ -191,7 +190,7 @@ void fuerzas(float referencia[3][3], float deformado[3][3], float fuerzas[3][3])
 
 		// 4. Volumen del elemento revision Sep/14/2010
 		float a0 = ((xj-xi)*(yk-yi) - (xk-xi)*(yj-yi))/2.0;
-		float espesor = 3.5*0.0025;
+		float espesor = 0.0025;
 		
 		// 5. Calculo de las componentes de fuerza revision Sep/14/2010
 		float fxi = dwdui*a0*espesor;
@@ -238,7 +237,6 @@ float norm(float a[3])
 {
 	return sqrt( (a[0]*a[0]) + (a[1]*a[1]) + (a[2]*a[2]));
 }
-
 
 
 /**

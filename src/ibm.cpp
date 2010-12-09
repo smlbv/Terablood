@@ -36,7 +36,6 @@ float phi_3(float r)
         return 0.0;
 }
 
-
 /**
 *	Función phi_4 para calcular función delta de Dirac con soporte cuatro
 *	@param float r, Distancia entre nodos (Lagrangiana - Euleriana)
@@ -48,7 +47,7 @@ float phi_4(float r)
         return ((1./8.)*(3.0-(2.0*fabs(r))+sqrt(1.0+(4.0*fabs(r))-(4.0*r*r))));
     if((1.0 <= fabs(r)) && (fabs(r) <= 2.0))
         return ((1./8.)*(5.0-(2.0*fabs(r))-sqrt(-7.0+(12.0*fabs(r))-(4.0*r*r))));
-    if(2.0 <= fabs(r))
+    if(fabs(r) >= 2.0)
         return 0.0;
 }
 
@@ -91,24 +90,20 @@ float dirac_4(float *x)
 
 void spread(fluid fluido, mesh membrana, int x, int y, int z)
 {
-	omp_set_num_threads(2);
-	#pragma omp parallel
-		{
 	// Recorrer todos los nodos del fluido 
 	float pos[3]={0.0,0.0,0.0}, distancia[3]={0.0,0.0,0.0}, delta, df[3]={0.0,0.0,0.0}, fNodo[3]={0.0,0.0,0.0}, ref[3]={0.0,0.0,0.0};
 	float a, A, b, B, c, C;
 	int nodos = membrana.darNumeroNodos();
-	#pragma omp for  schedule(static)
 	for(int u=0;u<nodos;u++)
 	{
 		membrana.darPosNodo(u, pos);
 		membrana.darFuerzaNodo(u, fNodo);
-		a = pos[0]-4.0;
-		A = pos[0]+4.0;
-		b = pos[1]-4.0;
-		B = pos[1]+4.0;
-		c = pos[2]-4.0;
-		C = pos[2]+4.0;
+		a = pos[0]-3.0;
+		A = pos[0]+3.0;
+		b = pos[1]-3.0;
+		B = pos[1]+3.0;
+		c = pos[2]-3.0;
+		C = pos[2]+3.0;
 
 		for(int i = (int) a;i<A;i++)
 			for(int j = (int) b;j<B;j++)
@@ -124,7 +119,6 @@ void spread(fluid fluido, mesh membrana, int x, int y, int z)
 					fluido.addFuerza(i,j,k,df);
 				}
 	}
-	}//omp
 }
 
 /**
@@ -135,19 +129,15 @@ void interpolation(fluid fluido, mesh membrana, int x, int y, int z)
 	//Recorrer todos los nodos de la malla
 	float pos[3], distancia[3], delta, a, A, b, B, c, C, ux=0.0, uy=0.0, uz=0.0;
 	int nNodos = membrana.darNumeroNodos();
-	omp_set_num_threads(2);
-#pragma omp parallel
-		{
-	#pragma omp for  schedule(static)
 	for(int u=0;u<nNodos;u++)
 	{
 		membrana.darPosNodo(u, pos);
-		a = pos[0]-4.0;
-		A = pos[0]+4.0;
-		b = pos[1]-4.0;
-		B = pos[1]+4.0;
-		c = pos[2]-4.0;
-		C = pos[2]+4.0;
+		a = pos[0]-3.0;
+		A = pos[0]+3.0;
+		b = pos[1]-3.0;
+		B = pos[1]+3.0;
+		c = pos[2]-3.0;
+		C = pos[2]+3.0;
 		
 		for(int i = (int) a;i<A;i++)
 			for(int j = (int) b;j<B;j++)
@@ -166,5 +156,4 @@ void interpolation(fluid fluido, mesh membrana, int x, int y, int z)
 		uy=0.0;
 		uz=0.0;
 	}
-	}//omp
 }

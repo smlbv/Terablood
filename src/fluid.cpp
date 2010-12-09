@@ -81,10 +81,6 @@ void fluid::stream()
 {
 
 		int a=0,b=0,c=0;
-		omp_set_num_threads(2);
-#		pragma omp parallel
-		{
-#		pragma omp for  schedule(static)
 		for (int i=0;i<X;i++)
 			for (int j=0;j<Y;j++)
 				for (int k=1;k<Z-1;k++)
@@ -115,17 +111,11 @@ void fluid::stream()
 			velNodoInferior(cells[current][i][j][0],cells[other][i][j][0], U, V, W);
 			velNodoSuperior(cells[current][i][j][Z-1],cells[other][i][j][Z-1], U, V, W);
 			}
-		}
 }
 
 
 void fluid::collide()
 {
-	omp_set_num_threads(2);
-#		pragma omp parallel
-		{
-
-#		pragma omp for  schedule(static)
 	// collision step
 		for (int i=0;i<X;i++)
 			for (int j=0;j<Y;j++)
@@ -141,7 +131,7 @@ void fluid::collide()
 						u_y += e_y[l]*fi;
 						u_z += e_z[l]*fi;
 					}
-
+					
 					// Fronteras
 					if(k==0){u_x=-U;}
 					if(k==Z-1){u_x=U;}
@@ -149,11 +139,11 @@ void fluid::collide()
 					for (int l=0;l<19;l++) {
 						const Real tmp = (e_x[l]*u_x + e_y[l]*u_y + e_z[l]*u_z);
 						// Función de equilibrio
-						Real feq = w[l] * rho * ( 1.0 - 
-							(3.0/2.0 * (u_x*u_x + u_y*u_y + u_z*u_z)) +
-							(3.0 *     tmp) +
-							(9.0/2.0 * tmp*tmp ) );
-//						Real feq = w[l]*rho*(1.0+3.0*tmp);
+//						Real feq = w[l] * rho * ( 1.0 - 
+//							(3.0/2.0 * (u_x*u_x + u_y*u_y + u_z*u_z)) +
+//							(3.0 *     tmp) +
+//							(9.0/2.0 * tmp*tmp ) );
+						Real feq = w[l]*rho*(1.0+3.0*tmp);
 						// Fuerza por cada dirección i
 						Real v1[3]={0.0,0.0,0.0};
 						v1[0]=(e_x[l]-u_x)/(cs*cs);
@@ -174,7 +164,6 @@ void fluid::collide()
 					fuerza[i][j][k][1]=0.0;
 					fuerza[i][j][k][2]=0.0;					
 				} // ijk
-			}
 		// We're done for one time step, switch the grid... 
 		other = current;
 		current = (current+1)%2;

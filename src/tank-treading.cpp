@@ -3,7 +3,6 @@
 // Terminado Octubre 09 - 2010
 // --------------------------------------------------------------
 
-// Tipo de variables a utilizar 
 typedef double Real;
 
 // Librerias estandar
@@ -29,18 +28,18 @@ using namespace std;
 float dt = 1.0;
 float G = 0.01;
 float Re = 0.02;
-float ks = 0.0221311;
-float u = 4.76e-3;
+float ks = 5.55e-3;
+float u = 1.66e-3;
 float tau = 1.0;
 float H = 4e-5;
-int X = 35;
-int Y = 35;
-int Z = 35;
+int X = 100;
+int Y = 100;
+int Z = 100;
 float dx=H/X;
 //float omega = 1.0/tau;
 float R = (X/10.0);
-int STEPS = 500000;
-int VTK=50;
+int STEPS = 50000;
+int VTK=10;
 
 // -----------------------------------------------------------------------------
 // Propiedades y variables para el fluido
@@ -62,6 +61,7 @@ int main(int argc, char *argv[])
 	membrana.mesh_refine_tri4();
 	membrana.mesh_refine_tri4();
 	membrana.mesh_refine_tri4();
+	membrana.mesh_refine_tri4();
 	membrana.proyectarEsfera(R);
 	membrana.moverCentro((X-1.0)/2.0, (Y-1.0)/2.0, (Z-1.0)/2.0);
 	membrana.iniciarVelocidad();
@@ -70,8 +70,11 @@ int main(int argc, char *argv[])
 	referencia.mesh_refine_tri4();
 	referencia.mesh_refine_tri4();
 	referencia.mesh_refine_tri4();
+	referencia.mesh_refine_tri4();
 	referencia.proyectarEsfera(R);
 	referencia.moverCentro((X-1.0)/2.0, (Y-1.0)/2.0, (Z-1.0)/2.0);
+	referencia.iniciarVelocidad();
+	referencia.iniciarFuerzas();		
 	
 	for(int ts = 0 ; ts < STEPS ; ts++)
 	{
@@ -83,6 +86,7 @@ int main(int argc, char *argv[])
 	// -----------------------------------------------------------------------//
 	// 2. Encontrar nuevas posiciones de la membrana
 	// -----------------------------------------------------------------------//
+	//referencia.actualizarNodos(membrana.darNodos());
 	membrana.moverNodos(dt, dx);
 
 	// -----------------------------------------------------------------------//
@@ -109,7 +113,8 @@ int main(int argc, char *argv[])
 	// -----------------------------------------------------------------------//
 	// 7. Calcular propiedades macro de la membrana
 	// -----------------------------------------------------------------------//
-
+	membrana.calcularCambioArea(referencia);
+	
 	// -----------------------------------------------------------------------//
 	// 8. Visualización
 	// -----------------------------------------------------------------------//
@@ -117,6 +122,7 @@ int main(int argc, char *argv[])
 	{
 		fluido.guardar(ts);
 		membrana.guardarVTU(ts);
+		membrana.calcularVolumen();
 		printf("%d\n",ts);
 	}
 	}

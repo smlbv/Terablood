@@ -4,7 +4,7 @@
 # Sconstruct
 # Script utilizado para construir el proyecto
 # -----------------------------------------------------------------------------#
-env = Environment(CXXFLAGS=['-lm','-fopenmp'])
+env = Environment(CXXFLAGS=[])
 
 # -----------------------------------------------------------------------------#
 # Construir todas las librerias utilizadas

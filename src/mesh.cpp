@@ -88,6 +88,9 @@ mesh::~mesh()
 // Trasladar en el espacio el centro de la esfera
 void mesh::moverCentro(float x, float y, float z)
 {
+	cX = x;
+	cY = y;
+	cZ = z;
 	for(int i=0;i<nNodos;i++)
 	{
 		vertex[i][0] = vertex[i][0]  + x;
@@ -152,7 +155,7 @@ void mesh::rotarEstructura(float alpha, float phi, float theta)
 void mesh::proyectarRBC(float r)
 {
 
-	float c0 = 0.207;
+		float c0 = 0.207;
         float c1 = 2.000;
         float c2 = -1.123;
         float R  = r;
@@ -392,20 +395,28 @@ int mesh::guardarVTU(int t)
 
 	// Escribir velocidad 
 	fprintf(archivo,"POINT_DATA %d\n", nNodos);
-	fprintf(archivo,"VECTORS Velocidad double\n", nNodos);
+	fprintf(archivo,"VECTORS Velocidad double\n");
 	for(int i=0;i<nNodos;i++)
 	{
 		fprintf(archivo, "%f %f %f\n", velocidad[i][0], velocidad[i][1], velocidad[i][2]);
 	}
 	
 	// Escribir fuerza
-	//fprintf(archivo,"POINT_DATA %d\n", nNodos);
 	fprintf(archivo,"VECTORS Fuerza double\n", nNodos);
 	for(int i=0;i<nNodos;i++)
 	{
 		fprintf(archivo, "%f %f %f\n", fuerza[i][0], fuerza[i][1], fuerza[i][2]);
 	}
 	
+	// Escribir cambio de area
+	fprintf(archivo,"CELL_DATA %d \n", nCeldas);
+	fprintf(archivo,"SCALARS dArea double\n");
+	fprintf(archivo,"LOOKUP_TABLE default\n");
+	for(int i=0;i<nCeldas;i++)
+	{
+		fprintf(archivo, "%f \n", area[i]);
+	}
+
 	fclose(archivo);/*Cerramos el archivo*/
 	return 0;
 	}
@@ -532,5 +543,152 @@ void mesh::calcularFuerzas(mesh referencia)
 		fuerza[c][0] += fuerzas[2][0];
 		fuerza[c][1] += fuerzas[2][1];
 		fuerza[c][2] += fuerzas[2][2];
+	}
+}
+
+/**
++	Retorna el volumen del tetrahedro formado por los vertices de cada elemento
+*   y el centro de la esfera.
+*
+*/
+
+float mesh::darVolumenElemento(int i)
+{
+	float a[3], b[3], c[3], d[3], v1[3], v2[3], v3[3], temp[3], V;
+	int A, B, C;
+	
+	A=faces[i][0];
+	B=faces[i][1];
+	C=faces[i][2];
+	
+	a[0]=vertex[A][0];
+	a[1]=vertex[A][1];
+	a[2]=vertex[A][2];
+	
+	b[0]=vertex[B][0];
+	b[1]=vertex[B][1];
+	b[2]=vertex[B][2];
+	
+	c[0]=vertex[C][0];
+	c[1]=vertex[C][1];
+	c[2]=vertex[C][2];
+	
+	d[0] = cX;
+	d[1] = cY;
+	d[2] = cZ;
+	
+	v1[0] = a[0] - d[0];
+	v1[1] = a[1] - d[1];
+	v1[2] = a[2] - d[2];
+	
+	v2[0] = b[0] - d[0];
+	v2[1] = b[1] - d[1];
+	v2[2] = b[2] - d[2];
+	
+	v3[0] = c[0] - d[0];
+	v3[1] = c[1] - d[1];
+	v3[2] = c[2] - d[2];
+	
+	cross(v2, v3, temp[0], temp[1], temp[2]);
+	V = (temp[0]*v1[0] + temp[1]*v1[1] + temp[2]*v1[2])/6.0;
+	return fabs(V);
+}
+
+void mesh::calcularVolumen()
+
+{
+	volumen = 0.0;
+	for(int i = 0; i<nCeldas ; i++)
+	{
+		volumen += darVolumenElemento(i);
+	}
+	printf("Volumen: %f\n", volumen);
+}
+
+float mesh::darAreaElemento(int i)
+{
+	float a[3], b[3], c[3], v1[3], v2[3], temp[3];
+	int A, B, C;
+	A=faces[i][0];
+	B=faces[i][1];
+	C=faces[i][2];
+	
+	a[0]=vertex[A][0];
+	a[1]=vertex[A][1];
+	a[2]=vertex[A][2];
+	
+	b[0]=vertex[B][0];
+	b[1]=vertex[B][1];
+	b[2]=vertex[B][2];
+	
+	c[0]=vertex[C][0];
+	c[1]=vertex[C][1];
+	c[2]=vertex[C][2];
+	
+	v1[0] = b[0] - a[0];
+	v1[1] = b[1] - a[1];
+	v1[2] = b[2] - a[2];
+	
+	v2[0] = c[0] - a[0];
+	v2[1] = c[1] - a[1];
+	v2[2] = c[2] - a[2];
+	
+	cross(v1, v2, temp[0], temp[1], temp[2]);
+	return norm(temp)/2.0;
+}
+
+
+
+/**
+*	Función para realizar cross product entre dos vectores
+*   @param float a[3], Vector a
+*	@param float b[3], Vector b
+*	@param float &resultado[3], Paso por parametros
+*/
+void cross(float a[3], float b[3], float &x, float &y, float &z)
+{
+	x = a[1]*b[2] - a[2]*b[1];
+	y = a[2]*b[0] - a[0]*b[2];
+	z = a[0]*b[1] - a[1]*b[0];
+}
+
+
+/**
+*	Función para calcular la norma de un vector
+*   @param float a[3], Vector a
+*	@return float norma, Norma del vector
+*/
+float norm(float a[3])
+{
+	return sqrt( (a[0]*a[0]) + (a[1]*a[1]) + (a[2]*a[2]));
+}
+
+
+void mesh::calcularCambioArea(mesh ref)
+{
+	if(area==NULL)
+	{
+		// Contruir la estructura
+		area = new float[nCeldas];
+	}
+	for(int i = 0 ; i < nCeldas; i++)
+	{
+		area[i] = darAreaElemento(i)-ref.darAreaElemento(i);
+	}
+}
+
+
+void mesh::actualizarNodos(float **nodos)
+{
+	float x, y, z;
+	for(int u = 0 ; u< nNodos ; u++)
+	{
+		x = nodos[u][0];
+		y = nodos[u][1];
+		z = nodos[u][2];
+				
+		vertex[u][0] = x;
+		vertex[u][1] = y;
+		vertex[u][2] = z;
 	}
 }
