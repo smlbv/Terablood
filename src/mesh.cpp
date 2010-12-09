@@ -429,7 +429,13 @@ void mesh::iniciarVelocidad()
 	for(int i = 0 ; i<nNodos ; i++)
 	{
 		velocidad[i] = new float[3];
+		velocidad[i][0] = 0.0;
+		velocidad[i][1] = 0.0;
+		velocidad[i][2] = 0.0;
 		velocidad2[i] = new float[3];
+		velocidad2[i][0] = 0.0;
+		velocidad2[i][1] = 0.0;
+		velocidad2[i][2] = 0.0;
 	}
 }
 
@@ -439,6 +445,9 @@ void mesh::iniciarFuerzas()
 	for(int i = 0 ; i<nNodos ; i++)
 	{
 		fuerza[i] = new float[3];
+		fuerza[i][0] = 0.0;
+		fuerza[i][1] = 0.0;
+		fuerza[i][2] = 0.0;
 	}
 }
 
@@ -678,6 +687,37 @@ void mesh::calcularCambioArea(mesh ref)
 }
 
 
+void mesh::calcularFuerzaNeta(float fNeta[3])
+{
+	float fx=0., fy=0., fz=0., fNodo[3] ={0.,0.,0.};
+	for(int u = 0.0; u < nNodos ; u++)
+	{
+		darFuerzaNodo(u, fNodo);
+		fx += fNodo[0];
+		fy += fNodo[1];
+		fz += fNodo[2];	
+	}
+	fNeta[0] = fx;
+	fNeta[1] = fy;
+	fNeta[2] = fz;
+	fx = 0.0;
+	fy = 0.0;
+	fz = 0.0;
+}
+
+
+float mesh::calcularEnergia()
+{
+	return 0.0;
+}
+
+void mesh::calcularMomentoNeto(float fMomento[3])
+{
+	
+}
+
+
+
 void mesh::actualizarNodos(float **nodos)
 {
 	float x, y, z;
@@ -692,3 +732,4 @@ void mesh::actualizarNodos(float **nodos)
 		vertex[u][2] = z;
 	}
 }
+

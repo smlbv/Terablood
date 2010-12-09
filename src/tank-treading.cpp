@@ -25,21 +25,26 @@ using namespace std;
 // ----------------------------------------------------------------
 // 0. Conversion a cantidades adimensionales y parametros de flujo
 // ----------------------------------------------------------------
-float dt = 1.0;
-float G = 0.01;
+float rho = 1.0;
 float Re = 0.02;
-float ks = 5.55e-3;
-float u = 1.66e-3;
+float G = 0.01;
 float tau = 1.0;
-float H = 4e-5;
-int X = 100;
-int Y = 100;
-int Z = 100;
-float dx=H/X;
-//float omega = 1.0/tau;
+float nu = 1./6.;
+float dt = 1.0;
+int X = 25;
+int Y = 25;
+int Z = 25;
+float H = Z;
 float R = (X/10.0);
-int STEPS = 50000;
-int VTK=10;
+float gamma_dot = (Re*nu)/(R*R);
+float u = (gamma_dot*H)/2.0;
+float ks=(gamma_dot*nu*R)/G;
+float k = gamma_dot/G;
+float dx=H/X;
+int STEPS = 200.0/k;
+int VTK=1;
+float fNeta[3] = {0,0,0};
+float fMomento[3] = {0,0,0};
 
 // -----------------------------------------------------------------------------
 // Propiedades y variables para el fluido
@@ -123,8 +128,12 @@ int main(int argc, char *argv[])
 		fluido.guardar(ts);
 		membrana.guardarVTU(ts);
 		membrana.calcularVolumen();
+		membrana.calcularFuerzaNeta(fNeta);
+		membrana.calcularMomentoNeto(fMomento);
+		membrana.calcularEnergia();
+		printf("Equilibrio %f %f %f\n", fNeta[0], fNeta[1], fNeta[2]);
 		printf("%d\n",ts);
 	}
-	}
+}//Ciclo principal
 	return 0;
 }

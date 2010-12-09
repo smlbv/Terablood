@@ -70,6 +70,9 @@
 		float darAreaElemento(int i);
 		float darVolumenElemento(int i);
 		void calcularVolumen();
+		void calcularFuerzaNeta(float fNeta[3]);
+		float calcularEnergia();
+		void calcularMomentoNeto(float fMomento[3]);
 		// Constructor
 		mesh();
 		// Destructor
